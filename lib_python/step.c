@@ -10,22 +10,21 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <Python.h>
-
 #include "core/opcodes.h"
 
-#include "step.h"
-
-// Stuff needed to make the existing code happy
-
-
-/**
- * My main test-driver program
- */
-int main(void)
+int32_t step(uint32_t inst)
 {
+    //uint32_t inst = 0x4011;
 
-    step(0x4011);
+    struct op* op = find_op( inst);
+    
+    assert(op);
+    if (op->is16)
+        op->op16.fn(inst);
+    else
+        op->op32.fn(inst);
 
     return 0;
 }
+
+
