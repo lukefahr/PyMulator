@@ -12,6 +12,8 @@
 
 #include "cpu/core.h"
 
+#include "helpers.h"
+
 uint32_t 
 read_word_quiet(uint32_t addr)
 {
@@ -47,8 +49,13 @@ write_word_unaligned(uint32_t addr, uint32_t val)
 uint16_t 
 read_halfword(uint32_t addr)
 {
-	assert(false);
-	return 0;
+    char buf [255];
+    snprintf( (char*)&buf, 255, "x/1xh 0x%x", addr);
+    uint32_t val = _read32(buf);
+    assert(  (val & 0xffff0000) == 0 ); //make sure it's only a half-word
+
+    DBG2("reading halfword: 0x%x -> 0x%x\n", addr, val);
+    return (uint16_t) val;
 }
 
 void 

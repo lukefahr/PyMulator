@@ -27,9 +27,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
+#include "helpers.h"
+#include "interface.h"
+
+#include "core/common.h"
 #include "cpu/registers.h"
+
+#ifndef M_PROFILE
+    #error "Only supports M_PROFILE currently"
+#endif
 
 enum Mode CurrentMode;
 uint32_t physical_reg[SP_REG];	// SP,LR,PC not held here, so 13 registers
@@ -37,8 +46,6 @@ uint32_t sp_process; // "private" export
 uint32_t sp_main; // "private" export
 uint32_t *physical_sp_p = &sp_main;
 uint32_t physical_lr;
-
-#ifdef M_PROFILE
 
 union apsr_t physical_apsr;
 union ipsr_t physical_ipsr;
@@ -72,15 +79,25 @@ union control_t physical_control;
 //     1: SPSEL, thread mode only (0 == use SP_main, 1 == use SP_process)
 //     2: FPCA, (1 if FP extension active)
 
-#endif // M
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 uint32_t CORE_reg_read(int r)
 {
-    assert(false);
-    return 0;
+    uint32_t val = -1;  
+
+    if (r >= 0 && r <= 15){
+        char buf [255];
+        snprintf( (char*)&buf, 255, "info register r%d", r);
+        val = _read32(buf);
+
+    } else {
+        assert(false && "Reg outside limits");
+    }
+    DBG2("reading reg: %d -> 0x%x\n", r, val);
+    return val;
+        
 	//extern uint32_t physical_reg[SP_REG];
 	//extern uint32_t *physical_sp_p;
 	//extern uint32_t physical_lr;
@@ -99,7 +116,19 @@ uint32_t CORE_reg_read(int r)
 }
 
 void CORE_reg_write(int r, uint32_t val) {
-    assert(false);
+
+    if (r >= 0 && r <= 15){
+        char buf [255];
+        snprintf( (char*)&buf, 255, "p $r%d = 0x%x", 
+                    r, val); 
+        uint32_t ret = _write32(buf);
+        assert(ret == val);
+
+    } else {
+        assert(false && "Reg outside limits");
+    }
+    DBG2("writing reg: %d -> 0x%x\n", r, val);
+     
 	//assert(r >= 0 && r < 16 && "CORE_reg_write");
 	//if (r == SP_REG) {
 	//	SW(physical_sp_p, val & 0xfffffffc);
@@ -114,7 +143,6 @@ void CORE_reg_write(int r, uint32_t val) {
 	//}
 }
 
-#ifdef M_PROFILE
 // <8:0> from IPSR
 // <26:24,15:10> from ESPR
 // <31:27>,[if DSP: <19:16>] from APSR
@@ -174,27 +202,48 @@ void CORE_CurrentMode_write(enum Mode mode) {
 }
 
 union apsr_t CORE_apsr_read(void) {
-    assert(false);
-	extern union apsr_t physical_apsr;
-	union apsr_t a;
-	a.storage = SR(&physical_apsr.storage);
-	return a;
+
+    const uint32_t apsr_mask = 0xf8000000;
+
+    const char * cmd = "info register xpsr";
+    uint32_t xpsr = _read32(cmd);
+
+    DBG2("reading reg: apsr-> 0x%x\n", xpsr);
+
+	union apsr_t apsr;
+    apsr.storage = xpsr & apsr_mask;
+    return apsr;
 }
 
-void CORE_apsr_write(union apsr_t val) {
-    assert(false);
-	extern union apsr_t physical_apsr;
-	uint8_t in_ITblock(void);
 
-	if (in_ITblock()) {
-		DBG1("WARN update of apsr in IT block\n");
-	}
-#ifdef M_PROFILE
-	if (val.storage & 0x07f0ffff) {
+
+void CORE_apsr_write(union apsr_t val) {
+
+    const uint32_t apsr_mask = 0xf8000000;
+    const uint32_t not_apsr_mask = ~apsr_mask;
+
+	if (val.storage & not_apsr_mask) {
 		DBG1("WARN update of reserved APSR bits\n");
+        assert(false);
 	}
-#endif
-	SW(&physical_apsr.storage, val.storage);
+
+    //get full xpsr
+    const char * xpsr_rd = "info register xpsr";
+    uint32_t xpsr = _read32(xpsr_rd);
+
+    //clear apsr bits
+    xpsr = xpsr & (~not_apsr_mask);
+    //or in the new apsr bits
+    xpsr = xpsr | val.storage;
+
+    //then write the new xpsr
+    char buf [255];
+    snprintf( (char*)&buf, 255, "p $xpsr = 0x%x", xpsr); 
+    uint32_t ret = _write32(buf);
+    DBG2("ret: %x\n", ret);
+    DBG2("xpsr: %x\n", xpsr);
+    assert(ret == xpsr);
+
 }
 
 union ipsr_t CORE_ipsr_read(void) {
@@ -212,11 +261,13 @@ void CORE_ipsr_write(union ipsr_t val) {
 }
 
 union epsr_t CORE_epsr_read(void) {
-    assert(false);
-	extern union epsr_t physical_epsr;
-	union epsr_t e;
-	e.storage = SR(&physical_epsr.storage);
-	return e;
+
+    uint32_t xpsr = _read32("info register xpsr");
+
+    DBG2("reading reg: epsr-> 0x%x\n", xpsr);
+	union epsr_t epsr;
+    epsr.storage = xpsr;
+    return epsr;
 }
 
 void CORE_epsr_write(union epsr_t val) {
@@ -329,6 +380,6 @@ void CORE_ufsr_write(union ufsr_t u) {
 	extern union ufsr_t ufsr;
 	SW(&ufsr.storage, u.storage);
 }
-#endif
+
 
 
