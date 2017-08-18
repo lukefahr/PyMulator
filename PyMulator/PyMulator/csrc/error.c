@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #define PP_STRING "COR"
+#include "core/common.h"
 #include "core/pretty_print.h"
 
 

@@ -16,7 +16,6 @@
 
 int32_t _read32 ( const char * gdb_cmd, uint32_t * val)
 {
-    uint32_t ret;
     char * cmd; 
     char * resp;
     
@@ -35,7 +34,7 @@ int32_t _read32 ( const char * gdb_cmd, uint32_t * val)
     if (arg2 == NULL) goto _read32err; 
 
     //pull out the value
-    ret = (uint32_t) strtol( arg2, NULL, 16); 
+    *val = (uint32_t) strtol( arg2, NULL, 16); 
 
     //cleanup memory
     free(cmd);
@@ -50,9 +49,8 @@ int32_t _read32 ( const char * gdb_cmd, uint32_t * val)
     return -1;
 }
 
-int32_t _write32 ( const char * gdb_cmd, uint32_t val)
+int32_t _write32 ( const char * gdb_cmd, uint32_t * val)
 {
-    uint32_t ret;
     char * cmd; 
     char * resp;
     
@@ -69,10 +67,10 @@ int32_t _write32 ( const char * gdb_cmd, uint32_t val)
     strtok(NULL, " \t"); 
     char * arg2 = strtok(NULL, " \t");
     if ( arg1 == NULL) goto _write32err;
-    if ( arg2 != NULL) goto _write32err;
+    if ( arg2 == NULL) goto _write32err;
 
     //pull out the value
-    ret = (uint32_t) strtol( arg2, NULL, 16); 
+    *val = (uint32_t) strtol( arg2, NULL, 16); 
 
     //cleanup memory
     free(cmd);

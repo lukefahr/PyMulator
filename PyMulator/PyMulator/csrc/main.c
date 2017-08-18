@@ -114,7 +114,21 @@ void call_from_mulator( char * command, char ** result)
 
         uint16_t value = 0x4011;
         asprintf( result, "0x%x: 0x%x", addr, value);
+    
+    } else if ( !strncmp(cmd1, "set", MAX_CHARS)){
 
+        char * cmd2 = strtok(NULL, " \t");
+        assert(!strncmp(cmd2, "{uint16_t}", MAX_CHARS));
+        char * cmd3 = strtok(NULL, " \t");
+        uint32_t addr = strtol(cmd3, NULL, 16);
+        strtok(NULL, " \t"); // = sign
+        char * cmd4 = strtok(NULL, " \t");
+        uint32_t val = strtol(cmd4, NULL, 16);
+    
+        DBG2("Mem Write: 0x%x -> 0x%x\n", addr, val);
+
+        asprintf( result, "0x%x: 0x%x", addr, val);
+       
     } else {
         assert(0);
     }

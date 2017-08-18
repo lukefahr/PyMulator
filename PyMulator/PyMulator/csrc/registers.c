@@ -92,7 +92,7 @@ uint32_t CORE_reg_read(int r)
         snprintf( (char*)&buf, 255, "info register r%d", r);
 
         if ( _read32(buf, &val) < 0){
-            CORE_WARN("reg_read FAILED\n");
+            CORE_WARN("FAILED\n");
         }
 
     } else {
@@ -126,7 +126,7 @@ void CORE_reg_write(int r, uint32_t val) {
                     r, val); 
         uint32_t ret;
         if (_write32(buf, &ret) < 0){
-            CORE_WARN("reg_write FAILED\n");
+            CORE_WARN("FAILED\n");
         }
 
         assert(ret == val);
@@ -215,7 +215,7 @@ union apsr_t CORE_apsr_read(void) {
     const char * xpsr_rd= "info register xpsr";
     uint32_t xpsr;
     if ( _read32(xpsr_rd, &xpsr) < 0){
-        CORE_WARN("reg_read FAILED\n");
+        CORE_WARN("FAILED\n");
     }
 
     DBG2("reading reg: apsr-> 0x%x\n", xpsr);
@@ -241,7 +241,7 @@ void CORE_apsr_write(union apsr_t val) {
     const char * xpsr_rd = "info register xpsr";
     uint32_t xpsr;
     if ( _read32(xpsr_rd, &xpsr) < 0){
-        CORE_WARN("reg_read FAILED\n");
+        CORE_WARN("FAILED\n");
     }
 
     //clear apsr bits

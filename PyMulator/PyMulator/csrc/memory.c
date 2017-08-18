@@ -54,7 +54,7 @@ read_halfword(uint32_t addr)
     uint32_t val;
 
     if ( _read32(buf, &val) < 0){
-        CORE_WARN("read_mem FAILED\n");
+        CORE_WARN("FAILED\n");
     }
 
     assert(  (val & 0xffff0000) == 0 ); //make sure it's only a half-word
@@ -66,7 +66,17 @@ read_halfword(uint32_t addr)
 void 
 write_halfword(uint32_t addr, uint16_t val)
 {
-	assert(false);
+    char buf [255];
+    snprintf( (char*)&buf, 255, "set {uint16_t} 0x%x = 0x%x", addr, val);
+    uint32_t ret;
+
+    if ( _write32(buf, &ret) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    assert( ret == val );
+
+    DBG2("writing halfword: 0x%x -> 0x%x\n", addr, val);
 }
 
 void 

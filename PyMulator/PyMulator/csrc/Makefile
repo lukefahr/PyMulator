@@ -3,7 +3,7 @@ MULATOR = ../../../simulator/
 .SECONDEXPANSION:
 
 all: $(wildcard *.c) 
-	gcc -O0 -g -std=c99 \
+	gcc -Wall -O0 -g -std=c99 \
 		-DM_PROFILE -DDEBUG1 -DDEBUG2 \
 		-I$(MULATOR) \
 		$(MULATOR)/cpu/misc.c \

@@ -3,17 +3,17 @@ import PyMulatorC
 
 class PyMulator(object):
     
-    class PyMulatorError(Exception):
-        pass
+    class PyMulatorError(Exception): pass
 
-    class PyMulatorCallbackError(PyMulatorError):
-        pass
-
-    def __init__(this):
+    def __init__(this, reg_dict, mem_dict):
         
+        this.reg_dict = reg_dict
+        this.mem_dict = mem_dict
+
         # register our callback function
         PyMulatorC.register_callback(this.callback)
 
+        # setup our specific callback functions
         this._reg_read = this._default_reg_read
         this._reg_write = this._default_reg_write
         this._mem_read = this._default_mem_read
@@ -24,12 +24,16 @@ class PyMulator(object):
         PyMulatorC.call_to_mulator("stepi")
 
     def callback(this, gdb_str):
+
+        print ('Input: ' + gdb_str)
+
         cmds = gdb_str.split()
 
         # register read
         if 'info' == cmds[0]:
             if ( len(cmds) < 2): 
-                raise PyMulatorCallbackError(gdb_str)
+                print("Bad Callback")
+                return None
 
             if 'register' in cmds[1]:
                 
@@ -45,7 +49,8 @@ class PyMulator(object):
         elif 'p' == cmds[0]:
 
             if ( len(cmds) < 4): 
-                raise PyMulatorCallbackError(gdb_str)
+                print("Bad Callback")
+                return None
 
             reg = cmds[1].strip('$')
             # 2 is equal sign
@@ -56,19 +61,36 @@ class PyMulator(object):
             result = '$0 = ' + hex(val)
 
         # memory read
-        elif 'x/1xh' in cmds[0]:
-
+        elif 'x/1xh' == cmds[0]:
             if ( len(cmds) < 2): 
-                raise PyMulatorCallbackError(gdb_str)
+                print("Bad Callback")
+                return None
             
-            addr = cmds[1]
+            addr = int(cmds[1],16)
             val = this._mem_read(addr)
 
             result = hex(addr) + ': ' + hex(val)
-        
-        else: raise PyMulatorCallbackError(gdb_str)
+       
+        elif 'set' == cmds[0]:
+            if (len(cmds) < 5 ):
+                print("Bad Callback")
+                return None
+            
+            if cmds[1] != '{uint16_t}':
+                print("Bad Callback")
+                return None
+            
+            addr = int(cmds[2],16)
+            val = int(cmds[4],16)
 
-        print ('Input: ' + gdb_str)
+            this._mem_write(addr,val)
+
+            result = hex(addr) + ': ' + hex(val)
+            
+        else: 
+            print("Bad Callback")
+            return None
+
         print ('Output: ' + result)
         return result
 
@@ -78,7 +100,7 @@ class PyMulator(object):
         return 0
 
     def _default_reg_write(this, reg, val):
-        print ("Using Default Register Read")
+        print ("Using Default Register Write")
         return 0
 
     def _default_mem_read(this, addr):
@@ -86,7 +108,7 @@ class PyMulator(object):
         return 0x4011
 
     def _default_mem_write(this, addr, val):
-        print ("Using Default Memory Read")
+        print ("Using Default Memory Write")
         return 0
 
 
