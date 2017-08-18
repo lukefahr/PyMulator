@@ -1,116 +1,108 @@
 
+from inspect import getframeinfo, stack
+import os
+
 import PyMulatorC
 
 class PyMulator(object):
     
     class PyMulatorError(Exception): pass
 
-    def __init__(this, reg_dict, mem_dict):
+    class RegFile:
+        def __getitem__(this,key):
+            print ('RegRd ' + str(key))
+            return 0
+        def __setitem__(this,key,val):            
+            print ('RegWr ' + str(key))
+    
+    class Memory:
+        def __getitem__(this,key):
+            print ('MemRd ' + str(key))
+            return 0x4011
+        def __setitem__(this,key,val):            
+            print ('MemWr ' + str(key))
+ 
+
+    def dprintf(this, out):
+        if (this.debug == True):
+            caller = getframeinfo(stack()[1][0])
+            print "%s:%d : %s" %  \
+                (os.path.basename(caller.filename), caller.lineno, out)
+
+    def __init__(this, registers, memory, debug=False):
         
-        this.reg_dict = reg_dict
-        this.mem_dict = mem_dict
+        this.debug = debug
+
+        this.registers = registers
+        this.memory = memory 
+
+        if (this.registers == None):
+            print ("WARNING: dummy RegFile")
+            this.registers = this.RegFile()
+        if (this.memory == None):
+            print ("WARNING: dummy Memory")
+            this.memory = this.Memory()
 
         # register our callback function
-        PyMulatorC.register_callback(this.callback)
-
-        # setup our specific callback functions
-        this._reg_read = this._default_reg_read
-        this._reg_write = this._default_reg_write
-        this._mem_read = this._default_mem_read
-        this._mem_write = this._default_mem_write
-
+        PyMulatorC.register_callback(this._callback)
 
     def stepi(this):
         PyMulatorC.call_to_mulator("stepi")
 
-    def callback(this, gdb_str):
+    def _callback(this, gdb_str):
 
-        print ('Input: ' + gdb_str)
+        result = None
+
+        this.dprintf('Input: ' + gdb_str)
 
         cmds = gdb_str.split()
 
         # register read
-        if 'info' == cmds[0]:
-            if ( len(cmds) < 2): 
-                print("Bad Callback")
-                return None
+        if 'info' == cmds[0] and (len(cmds) > 1): 
 
-            if 'register' in cmds[1]:
-                
+            if 'register' in cmds[1] and (len(cmds) > 2):
+                this.dprintf('Reading Register: ' + cmds[2])
+
                 reg = cmds[2]
-                reg_val = this._reg_read(reg)
+
+                reg_val = this.registers[reg]
 
                 result = reg + ' ' + hex(reg_val)
 
-            else:
-                raise PyMulatorCallbackError(gdb_str)
-
         # register write
-        elif 'p' == cmds[0]:
-
-            if ( len(cmds) < 4): 
-                print("Bad Callback")
-                return None
+        elif 'p' == cmds[0] and ( len(cmds) > 3): 
+            this.dprintf('Writing Register: ' + cmds[1])
 
             reg = cmds[1].strip('$')
             # 2 is equal sign
             val = int(cmds[3],16)
             
-            this._reg_write(reg,val)
+            this.registers[reg] = val 
 
             result = '$0 = ' + hex(val)
 
         # memory read
-        elif 'x/1xh' == cmds[0]:
-            if ( len(cmds) < 2): 
-                print("Bad Callback")
-                return None
-            
+        elif 'x/1xh' == cmds[0] and ( len(cmds) > 1): 
+            this.dprintf('Reading Memory: ' + cmds[1])
+
             addr = int(cmds[1],16)
-            val = this._mem_read(addr)
+            val = this.memory[addr]
 
             result = hex(addr) + ': ' + hex(val)
        
-        elif 'set' == cmds[0]:
-            if (len(cmds) < 5 ):
-                print("Bad Callback")
-                return None
+        elif 'set' == cmds[0] and (len(cmds) > 4 ):
             
-            if cmds[1] != '{uint16_t}':
-                print("Bad Callback")
-                return None
+            if cmds[1] == '{uint16_t}':
+                this.dprintf('Writing Memory: ' + cmds[2])
+
+                addr = int(cmds[2],16)
+                val = int(cmds[4],16)
+
+                this.memory[addr] = val 
+
+                result = hex(addr) + ': ' + hex(val)
             
-            addr = int(cmds[2],16)
-            val = int(cmds[4],16)
-
-            this._mem_write(addr,val)
-
-            result = hex(addr) + ': ' + hex(val)
-            
-        else: 
-            print("Bad Callback")
-            return None
-
-        print ('Output: ' + result)
+        this.dprintf('Output: ' + str(result))
         return result
-
-
-    def _default_reg_read(this, reg):
-        print ("Using Default Register Read")
-        return 0
-
-    def _default_reg_write(this, reg, val):
-        print ("Using Default Register Write")
-        return 0
-
-    def _default_mem_read(this, addr):
-        print ("Using Default Memory Read")
-        return 0x4011
-
-    def _default_mem_write(this, addr, val):
-        print ("Using Default Memory Write")
-        return 0
-
-
 
 
