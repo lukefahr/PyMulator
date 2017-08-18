@@ -14,7 +14,7 @@
 #include "interface.h"
 
 
-uint32_t _read32 ( const char * gdb_cmd)
+int32_t _read32 ( const char * gdb_cmd, uint32_t * val)
 {
     uint32_t ret;
     char * cmd; 
@@ -26,24 +26,31 @@ uint32_t _read32 ( const char * gdb_cmd)
     call_from_mulator(cmd, &resp);
     
     //parse the response data
-    assert(resp!= NULL);
+    if (resp == NULL) goto _read32err; 
+
     char * arg1 = strtok(resp, " \t");
     char * arg2 = strtok(NULL, " \t");
-    assert( arg1 != NULL);
-    assert( arg2 != NULL);
+
+    if (arg1 == NULL) goto _read32err;
+    if (arg2 == NULL) goto _read32err; 
 
     //pull out the value
-    ret = strtol( arg2, NULL, 16); 
+    ret = (uint32_t) strtol( arg2, NULL, 16); 
 
     //cleanup memory
     free(cmd);
     free(resp);
    
     //and we're done
-    return ret;
+    return 0;
+
+    _read32err:
+    free(cmd);
+    free(resp);
+    return -1;
 }
 
-uint32_t _write32 ( const char * gdb_cmd)
+int32_t _write32 ( const char * gdb_cmd, uint32_t val)
 {
     uint32_t ret;
     char * cmd; 
@@ -55,22 +62,29 @@ uint32_t _write32 ( const char * gdb_cmd)
     call_from_mulator(cmd, &resp);
     
     //parse the response data
-    assert(resp!= NULL);
+    if (resp== NULL) goto _write32err;
+
     char * arg1 = strtok(resp, " \t");
     //writes come with an equal sign
-    char * eq = strtok(NULL, " \t"); 
+    strtok(NULL, " \t"); 
     char * arg2 = strtok(NULL, " \t");
-    assert( arg1 != NULL);
-    assert( arg2 != NULL);
+    if ( arg1 == NULL) goto _write32err;
+    if ( arg2 != NULL) goto _write32err;
 
     //pull out the value
-    ret = strtol( arg2, NULL, 16); 
+    ret = (uint32_t) strtol( arg2, NULL, 16); 
 
     //cleanup memory
     free(cmd);
     free(resp);
    
     //and we're done
-    return ret;
+    return 0;
+
+    _write32err:
+    
+    free(cmd);
+    free(resp);
+    return -1;
 }
 

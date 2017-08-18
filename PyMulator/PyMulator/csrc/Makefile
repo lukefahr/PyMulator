@@ -1,4 +1,4 @@
-MULATOR = ../../simulator/
+MULATOR = ../../../simulator/
 
 .SECONDEXPANSION:
 
@@ -6,7 +6,6 @@ all: $(wildcard *.c)
 	gcc -O0 -g -std=c99 \
 		-DM_PROFILE -DDEBUG1 -DDEBUG2 \
 		-I$(MULATOR) \
-		$$( python2-config --includes ) \
 		$(MULATOR)/cpu/misc.c \
 		$(MULATOR)/core/opcodes.c \
 		$(MULATOR)/core/isa/decode_helpers.c \

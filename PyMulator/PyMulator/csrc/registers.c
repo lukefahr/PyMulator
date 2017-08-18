@@ -90,7 +90,10 @@ uint32_t CORE_reg_read(int r)
     if (r >= 0 && r <= 15){
         char buf [255];
         snprintf( (char*)&buf, 255, "info register r%d", r);
-        val = _read32(buf);
+
+        if ( _read32(buf, &val) < 0){
+            CORE_WARN("reg_read FAILED\n");
+        }
 
     } else {
         assert(false && "Reg outside limits");
@@ -121,7 +124,11 @@ void CORE_reg_write(int r, uint32_t val) {
         char buf [255];
         snprintf( (char*)&buf, 255, "p $r%d = 0x%x", 
                     r, val); 
-        uint32_t ret = _write32(buf);
+        uint32_t ret;
+        if (_write32(buf, &ret) < 0){
+            CORE_WARN("reg_write FAILED\n");
+        }
+
         assert(ret == val);
 
     } else {
@@ -205,8 +212,11 @@ union apsr_t CORE_apsr_read(void) {
 
     const uint32_t apsr_mask = 0xf8000000;
 
-    const char * cmd = "info register xpsr";
-    uint32_t xpsr = _read32(cmd);
+    const char * xpsr_rd= "info register xpsr";
+    uint32_t xpsr;
+    if ( _read32(xpsr_rd, &xpsr) < 0){
+        CORE_WARN("reg_read FAILED\n");
+    }
 
     DBG2("reading reg: apsr-> 0x%x\n", xpsr);
 
@@ -229,7 +239,10 @@ void CORE_apsr_write(union apsr_t val) {
 
     //get full xpsr
     const char * xpsr_rd = "info register xpsr";
-    uint32_t xpsr = _read32(xpsr_rd);
+    uint32_t xpsr;
+    if ( _read32(xpsr_rd, &xpsr) < 0){
+        CORE_WARN("reg_read FAILED\n");
+    }
 
     //clear apsr bits
     xpsr = xpsr & (~not_apsr_mask);
@@ -239,9 +252,15 @@ void CORE_apsr_write(union apsr_t val) {
     //then write the new xpsr
     char buf [255];
     snprintf( (char*)&buf, 255, "p $xpsr = 0x%x", xpsr); 
-    uint32_t ret = _write32(buf);
+    uint32_t ret;
+    
+    if (_write32(buf, &ret) < 0){
+        CORE_WARN("reg_write FAILED\n");
+    }
+
     DBG2("ret: %x\n", ret);
     DBG2("xpsr: %x\n", xpsr);
+
     assert(ret == xpsr);
 
 }
@@ -262,7 +281,11 @@ void CORE_ipsr_write(union ipsr_t val) {
 
 union epsr_t CORE_epsr_read(void) {
 
-    uint32_t xpsr = _read32("info register xpsr");
+    const char * xpsr_rd= "info register xpsr";
+    uint32_t xpsr;
+    if ( _read32(xpsr_rd, &xpsr) < 0){
+        CORE_WARN("reg_read FAILED\n");
+    }
 
     DBG2("reading reg: epsr-> 0x%x\n", xpsr);
 	union epsr_t epsr;

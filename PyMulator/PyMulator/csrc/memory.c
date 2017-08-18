@@ -51,7 +51,12 @@ read_halfword(uint32_t addr)
 {
     char buf [255];
     snprintf( (char*)&buf, 255, "x/1xh 0x%x", addr);
-    uint32_t val = _read32(buf);
+    uint32_t val;
+
+    if ( _read32(buf, &val) < 0){
+        CORE_WARN("read_mem FAILED\n");
+    }
+
     assert(  (val & 0xffff0000) == 0 ); //make sure it's only a half-word
 
     DBG2("reading halfword: 0x%x -> 0x%x\n", addr, val);

@@ -13,7 +13,7 @@
 #include "core/opcodes.h"
 #include "cpu/registers.h"
 
-void _stepi();
+void _stepi(void);
 
 /** this will use gdb syntax */
 void call_to_mulator( const char * cmd)
@@ -25,7 +25,7 @@ void call_to_mulator( const char * cmd)
 
 
 
-void _stepi()
+void _stepi(void)
 {
     uint32_t pc = CORE_reg_read( PC_REG );     
     uint32_t inst = read_halfword(pc);

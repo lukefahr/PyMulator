@@ -9,8 +9,8 @@
 #ifndef __HELPERS_H__
 #define __HELPERS_H__
 
-uint32_t _read32 ( const char * gdb_cmd);
-uint32_t _write32 ( const char * gdb_cmd);
+int32_t _read32 ( const char * gdb_cmd, uint32_t * val );
+int32_t _write32 ( const char * gdb_cmd, uint32_t * val );
 
 #endif
 
