@@ -5,12 +5,15 @@
 #include "PRCv17.h"
 #include "FLPv2S_RF.h"
 #include "PMUv7H_RF.h"
+#include "SNSv10_RF.h"
+#include "RDCv1_RF.h"
 #include "mbus.h"
 
 #define PRC_ADDR    0x1
 #define FLP_ADDR    0x4
 #define NODE_A_ADDR 0x8
-#define NODE_B_ADDR 0xC
+#define SNS_ADDR    0xC
+#define RDC_ADDR    0x5
 #define PMU_ADDR    0xE
 
 // FLPv2S Payloads
@@ -36,12 +39,16 @@ volatile flpv2s_r07_t FLPv2S_R07_GO       = FLPv2S_R07_DEFAULT;
 volatile pmuv7h_r51_t PMUv7H_R51_CONF = PMUv7H_R51_DEFAULT;
 volatile pmuv7h_r52_t PMUv7H_R52_IRQ  = PMUv7H_R52_DEFAULT;
 
+volatile rdcv1_r10_t RDCv1_R10_BRDC_IRQ_1 = RDCv1_R10_DEFAULT;
+volatile rdcv1_r11_t RDCv1_R11_BRDC_IRQ_2 = RDCv1_R11_DEFAULT;
+volatile rdcv1_r12_t RDCv1_R12_BRDC_RST   = RDCv1_R12_DEFAULT;
+
 // Select Testing
 #ifdef PREv17
 #else
 #endif
 volatile uint32_t do_cycle0  = 1; // GOCEP GEN_IRQ Check
-volatile uint32_t do_cycle1  = 0; // 
+volatile uint32_t do_cycle1  = 1; // 
 volatile uint32_t do_cycle2  = 0; // 
 volatile uint32_t do_cycle3  = 0; // 
 volatile uint32_t do_cycle4  = 0; // 
@@ -168,7 +175,8 @@ void initialization (void) {
     // Enumeration
     mbus_enumerate(FLP_ADDR);
     mbus_enumerate(NODE_A_ADDR);
-    mbus_enumerate(NODE_B_ADDR);
+    mbus_enumerate(SNS_ADDR);
+    mbus_enumerate(RDC_ADDR);
     mbus_enumerate(PMU_ADDR);
 
     //Set Halt
@@ -198,7 +206,23 @@ void cycle0 (void) {
     } 
 }
 
-void cycle1 (void) { if (do_cycle1 == 1) { } }
+void cycle1 (void) { 
+    if (do_cycle1 == 1) { 
+        // Set up RDC IRQ Configuration
+        RDCv1_R11_BRDC_IRQ_2.BRDC_IRQ_LENGTH_1 = 3;
+        RDCv1_R11_BRDC_IRQ_2.BRDC_IRQ_PAYLOAD_ADDR = 0x20;
+        mbus_remote_register_write(RDC_ADDR, 0x11, RDCv1_R11_BRDC_IRQ_2.as_int);
+
+        // Start BRDC
+        set_halt_until_mbus_trx();
+        RDCv1_R12_BRDC_RST.BRDC_RSTB = 1;
+        RDCv1_R12_BRDC_RST.BRDC_IB_ENB = 0;
+        RDCv1_R12_BRDC_RST.BRDC_OSC_RESET = 0;
+        mbus_remote_register_write(RDC_ADDR, 0x12, RDCv1_R12_BRDC_RST.as_int);
+
+        set_halt_until_mbus_tx();
+    } 
+}
 void cycle2 (void) { if (do_cycle2 == 1) { } }
 void cycle3 (void) { if (do_cycle3 == 1) { } }
 void cycle4 (void) { if (do_cycle4 == 1) { } }

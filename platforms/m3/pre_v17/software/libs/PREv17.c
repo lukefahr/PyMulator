@@ -99,7 +99,7 @@ void set_halt_until_mbus_fwd(void) { *SREG_CONF_HALT = HALT_UNTIL_MBUS_FWD; }
 void set_halt_disable(void) { *SREG_CONF_HALT = HALT_DISABLE; }
 void set_halt_config(uint8_t new_config) { *SREG_CONF_HALT = new_config; }
 uint8_t get_current_halt_config(void) { return (uint8_t) *SREG_CONF_HALT; }
-void halt_cpu (void) { *SCTR_REG_ADDR = SCTR_CMD_HALT_CPU; }
+void halt_cpu (void) { *SCTR_REG_HALT_ADDR = SCTR_CMD_HALT_CPU; }
 
 //**************************************************
 // SPI/GPIO Pad and COTS Power Switch
