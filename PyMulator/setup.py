@@ -2,7 +2,11 @@
 
 import os
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    print "WARNING: SetupTools Error, Falling back to DistUtils"
+    from distutils.core import setup, Extension
 
 from PyMulator import __version__
 
