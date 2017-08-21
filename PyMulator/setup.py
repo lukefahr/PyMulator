@@ -51,8 +51,5 @@ setup(
     version = __version__,
     description = 'GDB-like interface for Mulator',
     ext_modules=[extension_mod],
-    #package_dir = { '' : 'lib_python' },
-    #script_name='./lib_python/setup.py',
-    #data_files=['./lib_python/setup.py'],
     )
 

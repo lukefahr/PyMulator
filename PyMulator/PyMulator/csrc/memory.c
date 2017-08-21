@@ -1,9 +1,21 @@
-/** 
- * Library to wrap M-ulator into the 
- * M3 soft-DBG project
+/* Mulator - An extensible {ARM} {e,si}mulator
+ * Copyright 2011-2012  Pat Pannuto <pat.pannuto@gmail.com>
+ * Copyright 2017  Andrew Lukefahr <lukefahr@indiana.edu>
  *
- * Andrew Lukefahr
- * lukefahr@umich.edu
+ * This file is part of Mulator.
+ *
+ * Mulator is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Mulator is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -17,33 +29,51 @@
 uint32_t 
 read_word_quiet(uint32_t addr)
 {
-	assert(false);
-	return 0;
+    return read_word(addr);
 }
 
 uint32_t 
 read_word(uint32_t addr)
 {
-	assert(false);
-	return 0;
+    char buf [255];
+    snprintf( (char*)&buf, 255, "x/1xw 0x%x", addr);
+    uint32_t val;
+
+    if ( _read32(buf, &val) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    DBG2("reading word: 0x%x -> 0x%x\n", addr, val);
+    return (uint16_t) val;
 }
 
 void 
 write_word(uint32_t addr, uint32_t val)
 {
-	assert(false);
+    char buf [255];
+    snprintf( (char*)&buf, 255, "set {uint32_t} 0x%x = 0x%x", addr, val);
+    uint32_t ret;
+
+    if ( _write32(buf, &ret) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    assert( ret == val );
+
+    DBG2("writing word: 0x%x -> 0x%x\n", addr, val);
+
 }
 
 void 
 write_word_aligned(uint32_t addr, uint32_t val)
 {	
-	assert(false);
+    UNIMPLIMENTED();
 }
 
 void 
 write_word_unaligned(uint32_t addr, uint32_t val)
 {
-	assert(false);
+    UNIMPLIMENTED();
 }
 
 uint16_t 
@@ -82,20 +112,42 @@ write_halfword(uint32_t addr, uint16_t val)
 void 
 write_halfword_unaligned(uint32_t addr, uint16_t val)
 {
-	assert(false);
+    UNIMPLIMENTED();
 }
 
 uint8_t 
 read_byte(uint32_t addr)
 {
-	assert(false);
-	return 0;
+    char buf [255];
+    snprintf( (char*)&buf, 255, "x/1xb 0x%x", addr);
+    uint32_t val;
+
+    if ( _read32(buf, &val) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    assert( val <= 0xff ); //make sure it's only a byte
+
+    DBG2("reading byte: 0x%x -> 0x%x\n", addr, val);
+    return (uint8_t) val;
+
 }
 
 void 
 write_byte(uint32_t addr, uint8_t val)
 {
-	assert(false);
+    char buf [255];
+    snprintf( (char*)&buf, 255, "set {uint8_t} 0x%x = 0x%x", addr, val);
+    uint32_t ret;
+
+    if ( _write32(buf, &ret) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    assert( ret == val );
+
+    DBG2("writing byte: 0x%x -> 0x%x\n", addr, val);
+
 }
 
 

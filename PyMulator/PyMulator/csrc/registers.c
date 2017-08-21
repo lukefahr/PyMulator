@@ -1,13 +1,6 @@
-/** 
- * Library to wrap M-ulator into the 
- * M3 soft-DBG project
- *
- * Andrew Lukefahr
- * lukefahr@umich.edu
- */
-
 /* Mulator - An extensible {ARM} {e,si}mulator
  * Copyright 2011-2012  Pat Pannuto <pat.pannuto@gmail.com>
+ * Copyright 2017  Andrew Lukefahr <lukefahr@indiana.edu>
  *
  * This file is part of Mulator.
  *
@@ -30,28 +23,17 @@
 #include <string.h>
 #include <assert.h>
 
-#include "helpers.h"
-#include "interface.h"
-
 #include "core/common.h"
 #include "cpu/registers.h"
+
+#include "helpers.h"
+#include "interface.h"
 
 #ifndef M_PROFILE
     #error "Only supports M_PROFILE currently"
 #endif
 
 enum Mode CurrentMode;
-uint32_t physical_reg[SP_REG];	// SP,LR,PC not held here, so 13 registers
-uint32_t sp_process; // "private" export
-uint32_t sp_main; // "private" export
-uint32_t *physical_sp_p = &sp_main;
-uint32_t physical_lr;
-
-union apsr_t physical_apsr;
-union ipsr_t physical_ipsr;
-union epsr_t physical_epsr;
-
-union ufsr_t ufsr;
 
 uint32_t physical_primask;
 //     0: priority	The exception mask register, a 1-bit register.
@@ -96,26 +78,11 @@ uint32_t CORE_reg_read(int r)
         }
 
     } else {
-        assert(false && "Reg outside limits");
+        UNIMPLIMENTED();
     }
     DBG2("reading reg: %d -> 0x%x\n", r, val);
     return val;
         
-	//extern uint32_t physical_reg[SP_REG];
-	//extern uint32_t *physical_sp_p;
-	//extern uint32_t physical_lr;
-	//extern uint32_t id_ex_PC;
-
-	//assert(r >= 0 && r < 16 && "CORE_reg_read");
-	//if (r == SP_REG) {
-	//	return SR(physical_sp_p) & 0xfffffffc;
-	//} else if (r == LR_REG) {
-	//	return SR(&physical_lr);
-	//} else if (r == PC_REG) {
-	//	return SR(&id_ex_PC) & 0xfffffffe;
-	//} else {
-	//	return SR(&physical_reg[r]);
-	//}
 }
 
 void CORE_reg_write(int r, uint32_t val) {
@@ -132,22 +99,12 @@ void CORE_reg_write(int r, uint32_t val) {
         assert(ret == val);
 
     } else {
-        assert(false && "Reg outside limits");
+        UNIMPLIMENTED();
     }
     DBG2("writing reg: %d -> 0x%x\n", r, val);
      
-	//assert(r >= 0 && r < 16 && "CORE_reg_write");
-	//if (r == SP_REG) {
-	//	SW(physical_sp_p, val & 0xfffffffc);
-	//} else if (r == LR_REG) {
-	//	SW(&physical_lr, val);
-	//} else if (r == PC_REG) {
 	//	DBG2("Writing %08x to PC\n", val & 0xfffffffe);
 	//	pipeline_flush_exception_handler(val & 0xfffffffe);
-	//}
-	//else {
-	//	SW(&(physical_reg[r]), val);
-	//}
 }
 
 // <8:0> from IPSR
@@ -155,73 +112,55 @@ void CORE_reg_write(int r, uint32_t val) {
 // <31:27>,[if DSP: <19:16>] from APSR
 static const uint32_t xPSR_ipsr_mask = 0x000001ff;
 static const uint32_t xPSR_epsr_mask = 0x0700fc00;
-static const uint32_t xPSR_apsr_dsp_mask = 0xf80f0000;
+//static const uint32_t xPSR_apsr_dsp_mask = 0xf80f0000;
 static const uint32_t xPSR_apsr_nodsp_mask = 0xf8000000;
 
 uint32_t CORE_xPSR_read(void) {
-    assert(false);
-	uint32_t xPSR = 0;
-	xPSR |= CORE_ipsr_read().storage & xPSR_ipsr_mask;
-	xPSR |= CORE_epsr_read().storage & xPSR_epsr_mask;
-    // M0's don't have DSP cores
-    //if (HaveDSPExt())
-    //    xPSR |= CORE_apsr_read().storage & xPSR_apsr_dsp_mask;
-    //else
-		xPSR |= CORE_apsr_read().storage & xPSR_apsr_nodsp_mask;
-	return xPSR;
-}
-
-void CORE_xPSR_write(uint32_t xPSR) {
-    assert(false);
-	union ipsr_t i = CORE_ipsr_read();
-	union epsr_t e = CORE_epsr_read();
-	union apsr_t a = CORE_apsr_read();
-
-	i.storage &= ~xPSR_ipsr_mask;
-	i.storage |= xPSR & xPSR_ipsr_mask;
-	CORE_ipsr_write(i);
-
-	e.storage &= ~xPSR_epsr_mask;
-	e.storage |= xPSR & xPSR_epsr_mask;
-	CORE_epsr_write(e);
-
-	uint32_t apsr_mask;
-    // M0's don't have DSP cores
-	//if (HaveDSPExt())
-	//	apsr_mask = xPSR_apsr_dsp_mask;
-	//else
-		apsr_mask = xPSR_apsr_nodsp_mask;
-	a.storage &= ~apsr_mask;
-	a.storage |= xPSR & apsr_mask;
-	CORE_apsr_write(a);
-}
-
-enum Mode CORE_CurrentMode_read(void) {
-    assert(false);
-	extern enum Mode CurrentMode;
-	return SR(&CurrentMode);
-}
-
-void CORE_CurrentMode_write(enum Mode mode) {
-    assert(false);
-	extern enum Mode CurrentMode;
-	return SW(&CurrentMode, mode);
-}
-
-union apsr_t CORE_apsr_read(void) {
-
-    const uint32_t apsr_mask = 0xf8000000;
-
     const char * xpsr_rd= "info register xpsr";
     uint32_t xpsr;
     if ( _read32(xpsr_rd, &xpsr) < 0){
         CORE_WARN("FAILED\n");
     }
 
-    DBG2("reading reg: apsr-> 0x%x\n", xpsr);
+    DBG2("reading reg: xpsr -> 0x%x\n", xpsr);
+    return xpsr;
+}
+
+void CORE_xPSR_write(uint32_t xPSR) {
+
+    char buf [255];
+    snprintf( (char*)&buf, 255, "p $xpsr = 0x%x", xPSR); 
+    uint32_t ret;
+    
+    if (_write32(buf, &ret) < 0){
+        CORE_WARN("reg_write FAILED\n");
+    }
+
+    assert(ret == xPSR);
+    DBG2("Writing xpsr: %x\n", xPSR);
+
+}
+
+enum Mode CORE_CurrentMode_read(void) {
+    assert(false);
+    UNIMPLIMENTED();
+	return 0;
+}
+
+void CORE_CurrentMode_write(enum Mode mode) {
+    assert(false);
+    UNIMPLIMENTED();
+}
+
+union apsr_t CORE_apsr_read(void) {
+
+    uint32_t xpsr = CORE_xPSR_read();
 
 	union apsr_t apsr;
-    apsr.storage = xpsr & apsr_mask;
+    apsr.storage = xpsr & xPSR_apsr_nodsp_mask;
+
+    DBG2("reading reg: apsr-> 0x%x\n", apsr.storage);
+
     return apsr;
 }
 
@@ -229,8 +168,7 @@ union apsr_t CORE_apsr_read(void) {
 
 void CORE_apsr_write(union apsr_t val) {
 
-    const uint32_t apsr_mask = 0xf8000000;
-    const uint32_t not_apsr_mask = ~apsr_mask;
+    const uint32_t not_apsr_mask = ~xPSR_apsr_nodsp_mask;
 
 	if (val.storage & not_apsr_mask) {
 		DBG1("WARN update of reserved APSR bits\n");
@@ -238,170 +176,155 @@ void CORE_apsr_write(union apsr_t val) {
 	}
 
     //get full xpsr
-    const char * xpsr_rd = "info register xpsr";
-    uint32_t xpsr;
-    if ( _read32(xpsr_rd, &xpsr) < 0){
-        CORE_WARN("FAILED\n");
-    }
+    uint32_t xpsr = CORE_xPSR_read();
 
     //clear apsr bits
-    xpsr = xpsr & (~not_apsr_mask);
+    xpsr = xpsr & (not_apsr_mask);
     //or in the new apsr bits
     xpsr = xpsr | val.storage;
 
-    //then write the new xpsr
-    char buf [255];
-    snprintf( (char*)&buf, 255, "p $xpsr = 0x%x", xpsr); 
-    uint32_t ret;
-    
-    if (_write32(buf, &ret) < 0){
-        CORE_WARN("reg_write FAILED\n");
-    }
+    CORE_xPSR_write(xpsr);
 
-    DBG2("ret: %x\n", ret);
-    DBG2("xpsr: %x\n", xpsr);
-
-    assert(ret == xpsr);
+    DBG2("writing reg: apsr-> 0x%x\n", val.storage);
 
 }
 
 union ipsr_t CORE_ipsr_read(void) {
-    assert(false);
-	extern union ipsr_t physical_ipsr;
-	union ipsr_t i;
-	i.storage = SR(&physical_ipsr.storage);
-	return i;
+
+    uint32_t xpsr = CORE_xPSR_read();
+
+	union ipsr_t ipsr;
+    ipsr.storage = xpsr & xPSR_ipsr_mask;
+
+    DBG2("reading reg: ipsr-> 0x%x\n", ipsr.storage);
+
+    return ipsr;
 }
 
 void CORE_ipsr_write(union ipsr_t val) {
-    assert(false);
-	extern union ipsr_t physical_ipsr;
-	SW(&physical_ipsr.storage, val.storage);
+
+	if (val.storage & ~xPSR_ipsr_mask) {
+		DBG1("WARN update of reserved iPSR bits\n");
+        assert(false);
+	}
+
+    //get full xpsr
+    uint32_t xpsr = CORE_xPSR_read();
+
+    //clear apsr bits
+    xpsr = xpsr & (~xPSR_ipsr_mask);
+    //or in the new ipsr bits
+    xpsr = xpsr | val.storage;
+
+    CORE_xPSR_write(xpsr);
+
+    DBG2("writing reg: ipsr-> 0x%x\n", val.storage);
 }
 
 union epsr_t CORE_epsr_read(void) {
 
-    const char * xpsr_rd= "info register xpsr";
-    uint32_t xpsr;
-    if ( _read32(xpsr_rd, &xpsr) < 0){
-        CORE_WARN("reg_read FAILED\n");
-    }
+    uint32_t xpsr = CORE_xPSR_read();
 
-    DBG2("reading reg: epsr-> 0x%x\n", xpsr);
 	union epsr_t epsr;
-    epsr.storage = xpsr;
+    epsr.storage = xpsr & xPSR_epsr_mask;
+
+    DBG2("reading reg: epsr-> 0x%x\n", epsr.storage);
+
     return epsr;
 }
 
 void CORE_epsr_write(union epsr_t val) {
-    assert(false);
-	extern union epsr_t physical_epsr;
-	SW(&physical_epsr.storage, val.storage);
+
+	if (val.storage & ~xPSR_epsr_mask) {
+		DBG1("WARN update of reserved epsr bits\n");
+        assert(false);
+	}
+
+    //get full xpsr
+    uint32_t xpsr = CORE_xPSR_read();
+
+    //clear apsr bits
+    xpsr = xpsr & (~xPSR_epsr_mask);
+    //or in the new epsr bits
+    xpsr = xpsr | val.storage;
+
+    CORE_xPSR_write(xpsr);
+
+    DBG2("writing reg: epsr-> 0x%x\n", val.storage);
+
 }
 
 bool CORE_control_nPRIV_read(void) {
     assert(false);
-	extern union control_t physical_control;
-	union control_t c;
-	c.storage = SR(&physical_control.storage);
-	return c.nPRIV;
+    UNIMPLIMENTED();
+    return false;
 }
 
 void CORE_control_nPRIV_write(bool npriv) {
     assert(false);
-	extern union control_t physical_control;
-	union control_t c;
-	c.storage = SR(&physical_control.storage);
-	c.nPRIV = npriv;
-	SW(&physical_control.storage, c.storage);
+    UNIMPLIMENTED();
 }
 
 bool CORE_control_SPSEL_read(void) {
     assert(false);
-	extern union control_t physical_control;
-	union control_t c;
-	c.storage = SR(&physical_control.storage);
-	return c.SPSEL;
+    UNIMPLIMENTED();
+    return false;
 }
 
-
-static void control_SPSEL_write(bool spsel, bool force, enum Mode forced_mode) {
-    assert(false);
-	union control_t c;
-	c.storage = SR(&physical_control.storage);
-	c.SPSEL = spsel;
-	SW(&physical_control.storage, c.storage);
-
-	enum Mode mode = (force) ? forced_mode : CORE_CurrentMode_read();
-	(void) mode;
-
-	// XXX: I'm confused on exactly the semantics here, esp w.r.t. exceptions
-	//if (mode == Mode_Thread) {
-		SWP(&physical_sp_p, (spsel) ? &sp_process : &sp_main);
-	//} else {
-	//	CORE_ERR_unpredictable("SPSEL write in Handler mode\n");
-	//}
-}
 
 void CORE_control_SPSEL_write(bool spsel) {
     assert(false);
-	control_SPSEL_write(spsel, false, 0);
+    UNIMPLIMENTED();
 }
 
 void CORE_update_mode_and_SPSEL(enum Mode mode, bool spsel) {
     assert(false);
-	CORE_CurrentMode_write(mode);
-	control_SPSEL_write(spsel, true, mode);
+    UNIMPLIMENTED();
 }
 
 bool CORE_primask_read(void) {
     assert(false);
-	extern uint32_t physical_primask;
-	return SR(&physical_primask);
+    UNIMPLIMENTED();
+    return false;
 }
 
 void CORE_primask_write(bool val) {
     assert(false);
-	extern uint32_t physical_primask;
-	SW(&physical_primask, val);
+    UNIMPLIMENTED();
 }
 
 uint8_t CORE_basepri_read(void) {
     assert(false);
-	extern uint32_t physical_basepri;
-	return SR(&physical_basepri);
+    UNIMPLIMENTED();
+    return 0;
 }
 
 void CORE_basepri_write(uint8_t val) {
     assert(false);
-	extern uint32_t physical_basepri;
-	SW(&physical_basepri, val);
+    UNIMPLIMENTED();
 }
 
 bool CORE_faultmask_read(void) {
     assert(false);
-	extern uint32_t physical_faultmask;
-	return SR(&physical_faultmask);
+    UNIMPLIMENTED();
+    return 0;
 }
 
 void CORE_faultmask_write(bool val) {
     assert(false);
-	extern uint32_t physical_faultmask;
-	SW(&physical_faultmask, val);
+    UNIMPLIMENTED();
 }
 
 union ufsr_t CORE_ufsr_read(void) {
     assert(false);
-	extern union ufsr_t ufsr;
+    UNIMPLIMENTED();
 	union ufsr_t u;
-	u.storage = SR(&ufsr.storage);
 	return u;
 }
 
 void CORE_ufsr_write(union ufsr_t u) {
     assert(false);
-	extern union ufsr_t ufsr;
-	SW(&ufsr.storage, u.storage);
+    UNIMPLIMENTED();
 }
 
 

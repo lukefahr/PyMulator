@@ -3,7 +3,7 @@ MULATOR = ../../../simulator/
 .SECONDEXPANSION:
 
 all: $(wildcard *.c) 
-	gcc -Wall -O0 -g -std=c99 \
+	$(CC) -Wall -O0 -g -std=c99 \
 		-DM_PROFILE -DDEBUG1 -DDEBUG2 \
 		-I$(MULATOR) \
 		$(MULATOR)/cpu/misc.c \
@@ -14,3 +14,5 @@ all: $(wildcard *.c)
 		$(wildcard $(MULATOR)/core/operations/*.c) \
 		$^
 
+clean:
+	rm -rf a.out a.out.*
