@@ -237,7 +237,9 @@ void gdb_write_regs( struct svc_args * regs )
 void gdb_break( struct svc_args * regs)
 {
     volatile uint32_t gdb_break_flag = 0x0;
+    //broadcast the address of the flag
     mbus_write_message32( 0xe0, (uint32_t) &gdb_break_flag);
+    // and the starting address of the registers
     mbus_write_message32( 0xe0, (uint32_t) regs);
 
     //mbus_write_message( 0xe0,  //std debug addr
