@@ -16,13 +16,13 @@ operations_dir = '../simulator/core/operations/'
 operations_files = map(lambda y: operations_dir+y, 
                     filter(lambda x: '.c' in x, os.listdir(operations_dir)))
 
-# the c++ extension module
+# the c extension module
 extension_mod = Extension(
     name = "PyMulatorC", 
     define_macros = [ ('M_PROFILE', None) ],
     include_dirs = ['../simulator/', './PyMulator'],
     sources = [   
-        "PyMulator/PyMulatorModuleC.c",
+        "PyMulator/PyMulatorC.c",
 
         "PyMulator/csrc/core.c",
         "PyMulator/csrc/extra.c",
