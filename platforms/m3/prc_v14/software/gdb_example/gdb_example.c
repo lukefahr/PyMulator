@@ -195,7 +195,7 @@ void handler_svcall_main (struct svc_args * regs)
     switch(svc_number)
     {
         case 0: // os-like call 
-                gdb_write_regs(regs);
+                //gdb_write_regs(regs);
                 break;
         case 1: //breakpoint-like call
                 //this wasn't a "real" instruction so backup 2 bytes
@@ -285,7 +285,7 @@ int main() {
         uint32_t count;
         for( count=0; count<1000; count++ ){
             mbus_write_message32(0xaa,count);
-            //__asm volatile ("svc #1"); //handler_svcall();
+            __asm volatile ("svc #0"); //handler_svcall();
             delay(MBUS_DELAY);
             delay(MBUS_DELAY);
         }
