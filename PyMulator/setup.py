@@ -19,7 +19,8 @@ operations_files = map(lambda y: operations_dir+y,
 # the c extension module
 extension_mod = Extension(
     name = "PyMulatorC", 
-    define_macros = [ ('M_PROFILE', None) ],
+    define_macros = [ ('M_PROFILE', None), ('NO_PIPELINE', None), \
+                        ('DEBUG1', None), ('DEBUG2',None)  ],
     include_dirs = ['../simulator/', './PyMulator'],
     sources = [   
         "PyMulator/PyMulatorC.c",
@@ -35,10 +36,11 @@ extension_mod = Extension(
         "PyMulator/csrc/terminate.c",
         "PyMulator/csrc/error.c",
 
-		"../simulator/cpu/misc.c",
-		"../simulator/core/opcodes.c",
 		"../simulator/core/isa/decode_helpers.c",
 		"../simulator/core/isa/decompile.c",
+		"../simulator/core/opcodes.c",
+        "../simulator/core/pipeline.c",
+		"../simulator/cpu/misc.c",
 
         ] + arm_thumb_files + operations_files,
         #debug only?

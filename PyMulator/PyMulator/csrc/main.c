@@ -63,8 +63,8 @@ void call_from_mulator( char * command, char ** result)
                 uint32_t reg = atoi(cmd3);
                 asprintf( result, "r%d\t0x%x", reg, reg);
 
-            } else if( (!strncmp(cmd3, "r15", MAX_CHARS)) ){ 
-                asprintf( result, "r15\t0x%x",  0xec4);
+            } else if( (!strncmp(cmd3, "pc", MAX_CHARS)) ){ 
+                asprintf( result, "pc\t0x%x",  0xec4);
 
             } else if( (!strncmp(cmd3, "xpsr", MAX_CHARS)) ){ 
                 asprintf( result, "xpsr\t0x%x",  0x41000000);
@@ -95,8 +95,7 @@ void call_from_mulator( char * command, char ** result)
             (!strncmp(reg, "$r11", MAX_CHARS)) ||
             (!strncmp(reg, "$r12", MAX_CHARS)) ||
             (!strncmp(reg, "$r13", MAX_CHARS)) ||
-            (!strncmp(reg, "$r14", MAX_CHARS)) ||
-            (!strncmp(reg, "$r15", MAX_CHARS)) ){
+            (!strncmp(reg, "$r14", MAX_CHARS)) ) {
             
                 uint32_t _val = strtol(val, NULL, 16);
                 

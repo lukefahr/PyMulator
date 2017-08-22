@@ -34,3 +34,13 @@ void state_write_p (uint32_t **ploc, uint32_t *pval)
 {
     UNIMPLIMENTED();
 }
+
+void state_start_tick(void)
+{
+    return;
+}
+
+void state_tock(void)
+{
+    return;
+}

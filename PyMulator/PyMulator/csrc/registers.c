@@ -68,43 +68,63 @@ union control_t physical_control;
 uint32_t CORE_reg_read(int r)
 {
     uint32_t val = -1;  
+    char buf [255];
 
-    if (r >= 0 && r <= 15){
-        char buf [255];
+    if (r == SP_REG) {
+        snprintf( (char*)&buf, 255, "info register sp");
+	} else if (r == LR_REG) {
+        snprintf( (char*)&buf, 255, "info register lr");
+	} else if (r == PC_REG) {
+        snprintf( (char*)&buf, 255, "info register pc");
+	} else if (r >= 0 && r <= 12){
         snprintf( (char*)&buf, 255, "info register r%d", r);
-
-        if ( _read32(buf, &val) < 0){
-            CORE_WARN("FAILED\n");
-        }
-
     } else {
         UNIMPLIMENTED();
     }
+
+    if ( _read32(buf, &val) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
     DBG2("reading reg: %d -> 0x%x\n", r, val);
     return val;
-        
+       
 }
 
-void CORE_reg_write(int r, uint32_t val) {
+void CORE_reg_write(int r, uint32_t val) 
+{
+    char buf [255];
 
-    if (r >= 0 && r <= 15){
-        char buf [255];
-        snprintf( (char*)&buf, 255, "p $r%d = 0x%x", 
-                    r, val); 
-        uint32_t ret;
-        if (_write32(buf, &ret) < 0){
-            CORE_WARN("FAILED\n");
-        }
+    if (r == SP_REG) {
+        snprintf( (char*)&buf, 255, "p $sp = 0x%x", val); 
+	} else if (r == LR_REG) {
+        snprintf( (char*)&buf, 255, "p $lr = 0x%x", val); 
+	} else if (r == PC_REG) {
+        snprintf( (char*)&buf, 255, "p $pc = 0x%x", val); 
 
-        assert(ret == val);
+        #ifdef NO_PIPELINE
+                pipeline_flush_exception_handler(val & 0xfffffffe);
+        #else
+            #error "What to do here?"
+        #endif
 
+	} else if (r >= 0 && r <= 12){
+        snprintf( (char*)&buf, 255, "p $r%d = 0x%x", r, val); 
     } else {
         UNIMPLIMENTED();
     }
+
+    uint32_t ret;
+    if (_write32(buf, &ret) < 0){
+        CORE_WARN("FAILED\n");
+    }
+
+    assert(ret == val);
+
     DBG2("writing reg: %d -> 0x%x\n", r, val);
      
-	//	DBG2("Writing %08x to PC\n", val & 0xfffffffe);
 	//	pipeline_flush_exception_handler(val & 0xfffffffe);
+
 }
 
 // <8:0> from IPSR
