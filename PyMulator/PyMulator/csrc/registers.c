@@ -24,6 +24,7 @@
 #include <assert.h>
 
 #include "core/common.h"
+#include "core/pipeline.h"
 #include "cpu/registers.h"
 
 #include "helpers.h"
@@ -104,6 +105,8 @@ void CORE_reg_write(int r, uint32_t val)
 
         #ifdef NO_PIPELINE
                 pipeline_flush_exception_handler(val & 0xfffffffe);
+                //hack-ish
+                _set_updatePC(true);
         #else
             #error "What to do here?"
         #endif

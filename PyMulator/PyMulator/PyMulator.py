@@ -32,6 +32,7 @@ class PyMulator(object):
     class RegFile:
         def __getitem__(this,key):
             print ('RegRd ' + str(key))
+            if key == 'pc': return 0+4 # ARM PC is wierd
             return 0
         def __setitem__(this,key,val):            
             print ('RegWr ' + str(key))

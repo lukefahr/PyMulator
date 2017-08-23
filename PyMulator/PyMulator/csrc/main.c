@@ -64,7 +64,10 @@ void call_from_mulator( char * command, char ** result)
                 asprintf( result, "r%d\t0x%x", reg, reg);
 
             } else if( (!strncmp(cmd3, "pc", MAX_CHARS)) ){ 
-                asprintf( result, "pc\t0x%x",  0xec4);
+                //movs
+                //asprintf( result, "pc\t0x%x",  0x3b0);
+                //branch + link
+                asprintf( result, "pc\t0x%x",  0x3ac);
 
             } else if( (!strncmp(cmd3, "xpsr", MAX_CHARS)) ){ 
                 asprintf( result, "xpsr\t0x%x",  0x41000000);
@@ -94,8 +97,9 @@ void call_from_mulator( char * command, char ** result)
             // skip
             (!strncmp(reg, "$r11", MAX_CHARS)) ||
             (!strncmp(reg, "$r12", MAX_CHARS)) ||
-            (!strncmp(reg, "$r13", MAX_CHARS)) ||
-            (!strncmp(reg, "$r14", MAX_CHARS)) ) {
+            (!strncmp(reg, "$lr", MAX_CHARS)) || 
+            (!strncmp(reg, "$sp", MAX_CHARS)) || 
+            (!strncmp(reg, "$pc", MAX_CHARS)) ) {
             
                 uint32_t _val = strtol(val, NULL, 16);
                 
@@ -121,8 +125,17 @@ void call_from_mulator( char * command, char ** result)
         assert(cmd2 != NULL);
 
         uint32_t addr = strtol(cmd2, NULL, 16);
+        
+        uint16_t value;
+        if (addr == 0x3b0)
+            value = 0x2201; // movs
+        else if (addr == 0x3ac)
+            value = 0xf7ff; //branch inst
+        else if (addr == 0x3ae)
+            value = 0xfe8c; //branch target
+        else value = 0x0;
 
-        uint16_t value = 0x4011;
+        //uint16_t value = 0x4011;
         asprintf( result, "0x%x: 0x%x", addr, value);
     
     } else if ( !strncmp(cmd1, "set", MAX_CHARS)){

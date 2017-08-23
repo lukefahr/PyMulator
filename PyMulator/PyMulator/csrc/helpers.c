@@ -25,6 +25,10 @@
 
 #include "interface.h"
 
+
+/* what set_updatePC and _get_updatePC actually modify */
+static uint8_t updatePC;
+
 int32_t _read32 ( const char * gdb_cmd, uint32_t * val)
 {
     char * cmd; 
@@ -95,5 +99,16 @@ int32_t _write32 ( const char * gdb_cmd, uint32_t * val)
     free(cmd);
     free(resp);
     return -1;
+}
+
+
+void _set_updatePC(uint8_t _true)
+{
+    updatePC = _true;
+}
+
+uint8_t _get_updatePC(void)
+{
+    return updatePC;
 }
 

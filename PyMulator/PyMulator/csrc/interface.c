@@ -26,6 +26,8 @@
 #include "core/opcodes.h"
 #include "cpu/registers.h"
 
+#include "helpers.h"
+
 void _stepi(void);
 
 /** this will use gdb syntax */
@@ -34,7 +36,7 @@ void call_to_mulator( const char * cmd)
     if( !strncmp(cmd, "stepi", sizeof("stepi")) ){
         _stepi();
     } else{
-        printf("Unrecognized call\n");
+        printf("Unrecognized command\n");
     }
 }
 
@@ -44,7 +46,11 @@ void call_to_mulator( const char * cmd)
 void _stepi(void)
 {
     uint32_t pc = CORE_reg_read( PC_REG );     
+    //ARM's pc = pc + 4 (reads only, so wierd)
+    pc -= 4;
     uint32_t inst = read_halfword(pc);
+    
+    _set_updatePC(false);
     
     // If inst[15:11] are any of
     // 11101, 11110, or 11111 then this is
@@ -71,6 +77,14 @@ void _stepi(void)
         op->op16.fn(inst);
     else
         op->op32.fn(inst);
+
+    //hack-ish
+    if (!_get_updatePC()){
+        //and manually adjust the PC if necessary
+        DBG2("stepi: advancing pc\n");
+        uint32_t npc = pc + 2;
+        CORE_reg_write(PC_REG, npc);
+    }
 
 }
 
