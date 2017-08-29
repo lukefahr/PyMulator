@@ -21,10 +21,16 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <pthread.h>
 
 #include <Python.h>
 
+#include "core/common.h"
 #include "csrc/interface.h"
+#include "csrc/helpers.h"
 
 //prototyping 
 static PyObject * py_call_to_mulator (PyObject * self, PyObject * args);
@@ -42,6 +48,8 @@ static PyMethodDef PyMulatorCMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+//pointer to the python callback function
+static PyObject *py_callback = NULL;
 
 //inializer for our class
 PyMODINIT_FUNC
@@ -58,30 +66,6 @@ initPyMulatorC(void)
     PyModule_AddObject(m, "error", PyMulatorCError);
 }
 
-//wrapper into C-land
-static PyObject * py_call_to_mulator(PyObject * self, PyObject * args)
-{
-
-    char * input;
-    PyObject * ret;
-
-    // parse arguments
-    if (!PyArg_ParseTuple(args, "s", &input)) {
-        return NULL;
-    }
-
-    // run the instruction
-    call_to_mulator(input);
-    int err = 0;
-    
-    // build the result into a Python object.
-    ret = PyBool_FromLong(err); 
-
-    return ret;
-}
-
-static PyObject *py_callback = NULL;
-
 static PyObject * 
 py_register_callback( PyObject * dummy, PyObject * args)
 {
@@ -96,6 +80,7 @@ py_register_callback( PyObject * dummy, PyObject * args)
         Py_XINCREF(temp);         /* Add a reference to new callback */
         Py_XDECREF(py_callback);  /* Dispose of previous callback */
         py_callback = temp;       /* Remember new callback */
+
         /* Boilerplate to return "None" */
         Py_INCREF(Py_None);
         result = Py_None;
@@ -103,37 +88,65 @@ py_register_callback( PyObject * dummy, PyObject * args)
     return result;
 }
 
+//wrapper into C-land
+static PyObject * py_call_to_mulator(PyObject * self, PyObject * args)
+{
+    int err = 0;
+    char * input;
+    PyObject * ret;
+
+    // parse arguments
+    if (!PyArg_ParseTuple(args, "s", &input)) {
+        return NULL;
+    }
+    
+    DBG2("T0: Start Mulator\n");
+    call_to_mulator(input);
+   
+
+    // build the result into a Python object.
+    ret = PyBool_FromLong(err); 
+
+    return ret;
+}
+
+//    //release GIL
+//    //these are some fun macros...
+//    Py_BEGIN_ALLOW_THREADS
+//    //reacquire GIL
+//    Py_END_ALLOW_THREADS 
+
 void call_from_mulator( char * command, char ** result)
 {
+
     PyObject *arglist;
     PyObject *pyresult;
     
-    //fixme
     if (py_callback == NULL){
         printf("Found NULL py_callback function, aborting\n");
-        return;
-    }
+        UNIMPLIMENTED();
+    } 
 
     /* Time to call the callback */
+    DBG2("T0: passing request to python: %s\n", command); 
     arglist = Py_BuildValue("(s)", command);
     pyresult = PyObject_CallObject(py_callback, arglist);
     Py_DECREF(arglist);
 
     if (pyresult == NULL){
         printf("Found NULL pyresult, aborting\n");
-        PyErr_SetString(PyMulatorCError, "bad result from callback");
-        *result= NULL; 
-
+        UNIMPLIMENTED();
     } else {
-       
-        const char * pyresult_str = PyString_AsString(pyresult);
-        
-        /* Here maybe use the result */
-        asprintf( result, "%s", pyresult_str); 
+        const char * resp = PyString_AsString(pyresult);
+
+        DBG2("T0: parsed response: %s", resp); 
+
+        /* Here we can (finally) use the result */
+        asprintf( result, "%s", resp); 
 
         Py_DECREF(pyresult);
-
     }
 
 }
+
 
