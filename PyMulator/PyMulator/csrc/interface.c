@@ -28,22 +28,23 @@
 
 #include "helpers.h"
 
-void _stepi(void);
+int _stepi(void);
 
 /** this will use gdb syntax */
-void call_to_mulator( const char * cmd)
+int call_to_mulator( const char * cmd)
 {
     if( !strncmp(cmd, "stepi", sizeof("stepi")) ){
-        _stepi();
+        return _stepi();
     } else{
         printf("Unrecognized command\n");
+        return -1;
     }
 }
 
 
 
 
-void _stepi(void)
+int _stepi(void)
 {
     uint32_t pc = CORE_reg_read( PC_REG );     
     //ARM's pc = pc + 4 (reads only, so wierd)
@@ -85,6 +86,7 @@ void _stepi(void)
         uint32_t npc = pc + 2;
         CORE_reg_write(PC_REG, npc);
     }
-
+    
+    return 0;
 }
 
