@@ -11,7 +11,8 @@ except ImportError:
 from PyMulator import __version__
 
 arm_thumb_dir =  '../simulator/core/isa/arm-thumb/' 
-arm_thumb_files = map(lambda y: arm_thumb_dir+y, filter(lambda x: '.c' in x, os.listdir(arm_thumb_dir)))
+arm_thumb_files = map(lambda y: arm_thumb_dir+y, 
+                    filter(lambda x: x.endswith('.c'), os.listdir(arm_thumb_dir)))
 operations_dir = '../simulator/core/operations/'
 operations_files = map(lambda y: operations_dir+y, 
                     filter(lambda x: '.c' in x, os.listdir(operations_dir)))
