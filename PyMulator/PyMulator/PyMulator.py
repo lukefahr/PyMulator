@@ -156,6 +156,9 @@ class PyMulator(object):
 
             # get the next one                
             msg = this.mulator_resp_queue.get()
+       
+        assert( this.mulator_resp_queue.empty())
+        assert( this.mulator_req_queue.empty())
 
         this._dprintf(cmd + ' complete, returning')
 
@@ -261,8 +264,9 @@ class PyMulator(object):
         # register our callback function
         PyMulatorC.register_callback(this._mulator_callback)
        
-        msg = reqQ.get()
+        msg = ''
         while  not msg.startswith('quit'):
+            msg = reqQ.get()
 
             PyMulatorC.call_to_mulator(msg)
 
