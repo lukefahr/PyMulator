@@ -42,6 +42,17 @@ int32_t _read32 ( const char * gdb_cmd, uint32_t * val );
  */
 int32_t _write32 ( const char * gdb_cmd, uint32_t * val );
 
+/**
+ * calls the host callback with a write gdb-like command
+ * (ie you want to write data to the host)
+ * and parses the result as a 32-bit int
+ * @param gdb_cmd the gdb-like command
+ * @param val pointer to where the parsed 32-bit result will be returned
+ * @return 0: success, <0: failure
+ */
+int32_t _write ( const char * gdb_cmd );
+
+
 /** 
  * a way to let PyMulator know that the PC has been updated
  * @param _true: set to false before the instruction, 

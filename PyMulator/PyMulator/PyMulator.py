@@ -219,7 +219,8 @@ class PyMulator(object):
                 raise Exception("Bad Memory Read")
 
             result = hex(addr) + ': ' + hex(val)
-       
+
+        #memory write 
         elif 'set' == cmds[0]:
             assert(len(cmds) > 4 )
             this._dprintf('Writing Memory: ' + cmds[2])
@@ -238,7 +239,7 @@ class PyMulator(object):
 
             this.memory[(addr,size)] = val 
 
-            result = hex(addr) + ': ' + hex(val)
+            result = ""
             
         this._dprintf('Output: ' + str(result))
         return result

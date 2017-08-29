@@ -101,6 +101,19 @@ int32_t _write32 ( const char * gdb_cmd, uint32_t * val)
     return -1;
 }
 
+int32_t _write( const char * gdb_cmd)
+{
+    char * cmd; 
+    char * resp = NULL;
+    
+    //copy the const cmd into another buffer
+    asprintf( &cmd, "%s", gdb_cmd);
+
+    //callback to get data
+    call_from_mulator(cmd, &resp);
+
+    return (strnlen(resp, 255) == 0);
+}
 
 void _set_updatePC(uint8_t _true)
 {

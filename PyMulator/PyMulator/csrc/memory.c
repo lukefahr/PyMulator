@@ -52,13 +52,8 @@ write_word(uint32_t addr, uint32_t val)
 {
     char buf [255];
     snprintf( (char*)&buf, 255, "set {uint32_t} 0x%x = 0x%x", addr, val);
-    uint32_t ret;
-
-    if ( _write32(buf, &ret) < 0){
-        CORE_WARN("FAILED\n");
-    }
-
-    assert( ret == val );
+    
+    _write(buf); 
 
     DBG2("writing word: 0x%x -> 0x%x\n", addr, val);
 
@@ -67,13 +62,22 @@ write_word(uint32_t addr, uint32_t val)
 void 
 write_word_aligned(uint32_t addr, uint32_t val)
 {	
-    UNIMPLIMENTED();
+    write_word(addr,val);
 }
 
 void 
 write_word_unaligned(uint32_t addr, uint32_t val)
 {
-    UNIMPLIMENTED();
+    uint8_t baddr = addr;
+    uint8_t bval = val & 0xff;
+    val = val >> 8;
+    for (int i = 0; i < 4; ++i){
+        write_byte(baddr, bval);
+
+        baddr += 1;
+        bval = val & 0xff;
+        val = val >> 8;
+    }
 }
 
 uint16_t 
@@ -98,13 +102,8 @@ write_halfword(uint32_t addr, uint16_t val)
 {
     char buf [255];
     snprintf( (char*)&buf, 255, "set {uint16_t} 0x%x = 0x%x", addr, val);
-    uint32_t ret;
 
-    if ( _write32(buf, &ret) < 0){
-        CORE_WARN("FAILED\n");
-    }
-
-    assert( ret == val );
+    _write(buf);
 
     DBG2("writing halfword: 0x%x -> 0x%x\n", addr, val);
 }
@@ -112,7 +111,16 @@ write_halfword(uint32_t addr, uint16_t val)
 void 
 write_halfword_unaligned(uint32_t addr, uint16_t val)
 {
-    UNIMPLIMENTED();
+    uint8_t baddr = addr;
+    uint8_t bval = val & 0xff;
+    val = val >> 8;
+    for (int i = 0; i < 2; ++i){
+        write_byte(baddr, bval);
+
+        baddr += 1;
+        bval = val & 0xff;
+        val = val >> 8;
+    }
 }
 
 uint8_t 
@@ -138,13 +146,8 @@ write_byte(uint32_t addr, uint8_t val)
 {
     char buf [255];
     snprintf( (char*)&buf, 255, "set {uint8_t} 0x%x = 0x%x", addr, val);
-    uint32_t ret;
 
-    if ( _write32(buf, &ret) < 0){
-        CORE_WARN("FAILED\n");
-    }
-
-    assert( ret == val );
+    _write(buf);
 
     DBG2("writing byte: 0x%x -> 0x%x\n", addr, val);
 

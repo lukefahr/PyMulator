@@ -160,7 +160,8 @@ void call_from_mulator( char * command, char ** result)
     
         DBG2("Mem Write: 0x%x -> 0x%x\n", addr, val);
 
-        asprintf( result, "0x%x: 0x%x", addr, val);
+        //gdb doesn't give a response
+        asprintf( result, "");
        
     } else {
         assert(0);

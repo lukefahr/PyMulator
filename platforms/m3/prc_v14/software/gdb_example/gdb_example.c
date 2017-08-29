@@ -180,6 +180,8 @@ struct svc_args
 
 void gdb_write_regs(struct svc_args * regs ) __attribute__ ((noinline));
 void gdb_break( struct svc_args * regs) __attribute__ ((noinline));
+//could be inlined in the future
+uint32_t gdb_mbus_write_message32(uint32_t addr, uint32_t data) __attribute__ ((noinline)) ;
 
 //  - The Definitive Guide to ARM Cortex-M0 and Cortex-M0+ Processors Section 10.7.1
 // SVC handler - main code to handle processing
@@ -238,15 +240,18 @@ void gdb_break( struct svc_args * regs)
 {
     volatile uint32_t gdb_break_flag = 0x0;
     //broadcast the address of the flag
-    mbus_write_message32( 0xe0, (uint32_t) &gdb_break_flag);
+    gdb_mbus_write_message32( 0xe0, (uint32_t) &gdb_break_flag);
     // and the starting address of the registers
-    mbus_write_message32( 0xe0, (uint32_t) regs);
+    gdb_mbus_write_message32( 0xe0, (uint32_t) regs);
 
-    //mbus_write_message( 0xe0,  //std debug addr
-    //                    (uint32_t*) regs, //start at the beginning of the struct
-    //                    sizeof(struct svc_args)/4 //we want # of 32-bit words
-    //                  );
-    while (gdb_break_flag != 0x1) {}
+   while (gdb_break_flag != 0x1) {}
+}
+
+//so we can soft-step into mbus_write_message32
+uint32_t gdb_mbus_write_message32(uint32_t addr, uint32_t data) {
+    uint32_t mbus_addr = 0xA0003000 | (addr << 4);
+    *((volatile uint32_t *) mbus_addr) = data;
+    return 1;
 }
 
 //********************************************************************
