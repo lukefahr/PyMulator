@@ -198,7 +198,7 @@ void handler_svcall_main (struct svc_args * regs)
                 gdb_write_regs(regs);
                 break;
         case 1: //breakpoint-like call
-                //this wasn't a "real" instruction so backup 2 bytes
+                //this wasn't a "real" instruction so backup one instruction
                 regs->pc -= 2; 
                 //then call breakpoint-like code
                 gdb_break(regs);
