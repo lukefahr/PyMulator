@@ -51,7 +51,9 @@ static PyMethodDef PyMulatorCMethods[] = {
 //pointer to the python callback function
 static PyObject *py_callback = NULL;
 
-//inializer for our class
+/**
+ * inializer for the PyMulatorC module 
+ */
 PyMODINIT_FUNC
 initPyMulatorC(void)
 {
@@ -66,6 +68,12 @@ initPyMulatorC(void)
     PyModule_AddObject(m, "error", PyMulatorCError);
 }
 
+/**
+ * called by python to register a callback function
+ *
+ * @dummy: a Python object of the class (not used)
+ * @args: a single argument containing a Python function
+ */
 static PyObject * 
 py_register_callback( PyObject * dummy, PyObject * args)
 {
@@ -88,7 +96,12 @@ py_register_callback( PyObject * dummy, PyObject * args)
     return result;
 }
 
-//wrapper into C-land
+/**
+ * called by python to start Mulator
+ * 
+ * @self: Python object to the class (not used)
+ * @args:  a single string containing the command to be passed to Mulator
+ */
 static PyObject * py_call_to_mulator(PyObject * self, PyObject * args)
 {
     int err = 0;
@@ -110,12 +123,14 @@ static PyObject * py_call_to_mulator(PyObject * self, PyObject * args)
     return ret;
 }
 
-//    //release GIL
-//    //these are some fun macros...
-//    Py_BEGIN_ALLOW_THREADS
-//    //reacquire GIL
-//    Py_END_ALLOW_THREADS 
-
+/**
+ * called by Mulator to request more information
+ * 
+ * This will call back into Python to request that information
+ *
+ * @command:  a gdb-like request from Mulator
+ * @result:  a pointer to where Mulator expects a gdb-like response to be placed
+ */
 void call_from_mulator( char * command, char ** result)
 {
 

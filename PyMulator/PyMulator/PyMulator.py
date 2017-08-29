@@ -1,23 +1,25 @@
 #!/usr/bin/env python
-#
-# Mulator - An extensible {ARM} {e,si}mulator
-# Copyright 2011-2012  Pat Pannuto <pat.pannuto@gmail.com>
-# Copyright 2017  Andrew Lukefahr <lukefahr@indiana.edu>
-#
-# This file is part of Mulator.
-#
-# Mulator is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Mulator is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
+
+'''
+ Mulator - An extensible {ARM} {e,si}mulator
+ Copyright 2011-2012  Pat Pannuto <pat.pannuto@gmail.com>
+ Copyright 2017  Andrew Lukefahr <lukefahr@indiana.edu>
+
+ This file is part of Mulator.
+
+ Mulator is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Mulator is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
+'''
 
 from inspect import getframeinfo, stack
 import multiprocessing
@@ -28,15 +30,38 @@ try:
     import threading
     import queue 
 except ImportError:
-    print("Python doesn't support threads")
+    print("ERROR: Your Python doesn't support threads")
     raise
 
-import PyMulatorC
+try:
+    import PyMulatorC
+except ImportError:
+    print("ERROR:  Couldn't find PyMulatorC module?")
+    raise
 
+
+'''
+ This is public PyMulator class.  PyMulatorC should not be called directly.
+
+ This provides a gdb-like interface into Mulator callable from within python.
+ All communication to/from Mulator is in gdb-compatable strings
+
+ To use this class, you will need to provide a dictionary (or equivalent) of 
+ the register and memory contents. See __init__ for more details. 
+
+ PyMulator currently accepts the following commands:
+    - stepi:  read the current pc register, find the instruction in memory, 
+                execute it, and update the register/memory contents accordingly
+ 
+'''
 class PyMulator(object):
     
-    class PyMulatorError(Exception): pass
+    class PyMulatorError(Exception): 
+        pass
 
+    '''
+     Example of how a regfile could work
+    '''
     class RegFile:
         def __init__(this): print ("WARNING: dummy RegFile")
         def __getitem__(this,key):
@@ -45,7 +70,10 @@ class PyMulator(object):
             return 0
         def __setitem__(this,key,val):            
             print ('RegWr ' + str(key))
-    
+   
+    '''
+     Example of how a memory could work
+    '''
     class Memory:
         def __init__(this): print ("WARNING: dummy Memory")
         def __getitem__(this,key):
@@ -57,23 +85,19 @@ class PyMulator(object):
             print ('MemWr ' + str(key))
  
 
-    def dprintf(this, out):
-        if (this.debug == True):
-            caller = getframeinfo(stack()[1][0])
-            #keep similar formatting as Mulator
-            print "222  %s:%d : %s" %  \
-                (os.path.basename(caller.filename), caller.lineno, out)
-
     def __init__(this, registers, memory, debug=False):
         '''
-        registers and should be accessable with the ['regName'] operator
+        Create a PyMulator module
+
+        @registers: dictionary-like structure to allow access via 
+        the ['regName'] operator
         i.e. registers['pc'] = 0x100, x = registers['r2'] 
 
-        memory should be accessable with [ (memAddr,size) ] operator
+        @memory: dictionary-like structure to allow access via 
+        the [ (memAddr,size) ] operator
         i.e. memory[ (0x100,32) ] = 0xdeadbeef, memory[ (0x20,8) ] = 0x55
-        this.debug = debug
 
-        debug will enable more debugging printing output
+        @debug: enable debugging output from this module
         '''
 
         this.ONEYEAR = 264 * 24 * 60 * 60
@@ -106,8 +130,16 @@ class PyMulator(object):
         '''
         this._process_cmd('stepi')
 
+    
     def _process_cmd(this, cmd):
-        this.dprintf('Issueing cmd: ' + str(cmd))
+        '''
+         sends an arbirary command to Mulator, processes
+         any subsequent requests for regs/memory
+         and returns when the command is finished
+
+         @cmd: string form of a gdb-like command 
+        '''
+        this._dprintf('Issueing cmd: ' + str(cmd))
         this.mulator_req_queue.put(cmd)
         
         #wait for a message
@@ -116,16 +148,16 @@ class PyMulator(object):
 
             # Mulator wants some other data
             # go get it, and respond back
-            this.dprintf('servicing req: ' + str(msg))
+            this._dprintf('servicing req: ' + str(msg))
             resp = this._get_data(msg)
 
-            this.dprintf('with resp: ' + str(resp))
+            this._dprintf('with resp: ' + str(resp))
             this.mulator_req_queue.put(resp)
 
             # get the next one                
             msg = this.mulator_resp_queue.get()
 
-        this.dprintf(cmd + ' complete, returning')
+        this._dprintf(cmd + ' complete, returning')
 
     def _get_data(this, gdb_str):
         '''
@@ -134,8 +166,10 @@ class PyMulator(object):
         grabs Python data, and returns a gdb-formatted 
         string of that data
 
+        @gdb_str: a gdb-like string of the requested data
+
         '''
-        this.dprintf('Input: ' + gdb_str)
+        this._dprintf('Input: ' + gdb_str)
 
         cmds = gdb_str.split()
         result = None
@@ -147,7 +181,7 @@ class PyMulator(object):
             if 'register' in cmds[1]:
                 assert(len(cmds) > 2)
 
-                this.dprintf('Reading Register: ' + cmds[2])
+                this._dprintf('Reading Register: ' + cmds[2])
 
                 reg = cmds[2]
 
@@ -158,7 +192,7 @@ class PyMulator(object):
         # register write
         elif cmds[0].startswith('p'):
             assert( len(cmds) > 3)
-            this.dprintf('Writing Register: ' + cmds[1])
+            this._dprintf('Writing Register: ' + cmds[1])
 
             reg = cmds[1].strip('$')
             # 2 is equal sign
@@ -171,7 +205,7 @@ class PyMulator(object):
         # memory read
         elif cmds[0].startswith('x/'):
             assert( len(cmds) > 1)
-            this.dprintf('Reading Memory: ' + cmds[1])
+            this._dprintf('Reading Memory: ' + cmds[1])
 
             addr = int(cmds[1],16)
 
@@ -188,7 +222,7 @@ class PyMulator(object):
        
         elif 'set' == cmds[0]:
             assert(len(cmds) > 4 )
-            this.dprintf('Writing Memory: ' + cmds[2])
+            this._dprintf('Writing Memory: ' + cmds[2])
 
             addr = int(cmds[2],16)
 
@@ -206,18 +240,21 @@ class PyMulator(object):
 
             result = hex(addr) + ': ' + hex(val)
             
-        this.dprintf('Output: ' + str(result))
+        this._dprintf('Output: ' + str(result))
         return result
     
 
     def _mulator_process(this, reqQ, respQ):
         '''
-
         Seperate Process that handles all interfacing with Mulator
         so we don't have to worry about the GIL
 
         This should only communicate with the rest of the class 
         via the queues
+
+        @reqQ: a request queue containing requests from the main process
+        
+        @respQ:  a response queue where this process places results
 
         '''
         # register our callback function
@@ -236,19 +273,32 @@ class PyMulator(object):
         Part of the _mulator_process callstack
 
         Callback by Mulator to request additional data from the system
-        accessably through Python 
-        (namely registers and memory)
+        accessably through Python (namely registers and memory)
 
-        The request will be a valid gdb-formated string
-        The response should also. 
+        @gdb_req:  a gdb-like string of a request from Mulator
+
+        @return: a gdb-like string of a response to Mulator
+
         '''
         
-        this.dprintf("Adding to queue:" + str(gdb_req))
+        this._dprintf("Adding to queue:" + str(gdb_req))
         this.mulator_resp_queue.put(gdb_req)
         gdb_resp = this.mulator_req_queue.get()
-        this.dprintf("received resp:" + str(gdb_resp))
+        this._dprintf("received resp:" + str(gdb_resp))
 
         return gdb_resp
+
+    def _dprintf(this, out):
+        '''
+         A simple debug function with formatting similar to Mulator
+
+         @out: the message to be printed
+        '''
+        if (this.debug == True):
+            caller = getframeinfo(stack()[1][0])
+            #keep similar formatting as Mulator
+            print "222  %s:%d : %s" %  \
+                (os.path.basename(caller.filename), caller.lineno, out)
 
 
 
