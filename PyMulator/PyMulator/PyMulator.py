@@ -148,9 +148,9 @@ class PyMulator(object):
 
             # Mulator wants some other data
             # go get it, and respond back
-            this._dprintf('servicing req: ' + str(msg))
             resp = this._get_data(msg)
 
+            this._dprintf('servicing req: ' + str(msg))
             this._dprintf('with resp: ' + str(resp))
             this.mulator_req_queue.put(resp)
 
@@ -169,7 +169,7 @@ class PyMulator(object):
         @gdb_str: a gdb-like string of the requested data
 
         '''
-        this._dprintf('Input: ' + gdb_str)
+        #this._dprintf('Input: ' + gdb_str)
 
         cmds = gdb_str.split()
         result = None
@@ -241,7 +241,7 @@ class PyMulator(object):
 
             result = ""
             
-        this._dprintf('Output: ' + str(result))
+        #this._dprintf('Output: ' + str(result))
         return result
     
 

@@ -165,14 +165,19 @@ void CORE_xPSR_write(uint32_t xPSR) {
 }
 
 enum Mode CORE_CurrentMode_read(void) {
-    assert(false);
-    UNIMPLIMENTED();
-	return 0;
+    enum Mode cur;
+    cur = Mode_Thread;
+    return cur;
 }
 
 void CORE_CurrentMode_write(enum Mode mode) {
-    assert(false);
-    UNIMPLIMENTED();
+    if (mode == Mode_Thread){
+        DBG2("Setting Mode to thread\n");
+    } else{
+        DBG2("Setting Mode to Handler?\n");
+        assert(false);
+        UNIMPLIMENTED();
+    }
 }
 
 union apsr_t CORE_apsr_read(void) {

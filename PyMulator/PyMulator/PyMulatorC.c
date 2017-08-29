@@ -154,7 +154,7 @@ void call_from_mulator( char * command, char ** result)
     } else {
         const char * resp = PyString_AsString(pyresult);
 
-        DBG2("T0: parsed response: %s", resp); 
+        DBG2("T0: parsed response: %s\n", resp); 
 
         /* Here we can (finally) use the result */
         asprintf( result, "%s", resp); 
