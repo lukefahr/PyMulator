@@ -19,18 +19,28 @@
  */
 
 #include <assert.h>
-
-#include "cpu/exception.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include "helpers.h"
 
-void 
-exception_return( uint32_t exception_return_pc){
-    UNIMPLIMENTED();
-}
-
-void UsageFault_divide_by_0(void)
+void state_write( uint32_t *loc, uint32_t val)
 {
     UNIMPLIMENTED();
 }
 
+void state_write_p (uint32_t **ploc, uint32_t *pval)
+{
+    UNIMPLIMENTED();
+}
+
+void state_start_tick(void)
+{
+    return;
+}
+
+void state_tock(void)
+{
+    return;
+}

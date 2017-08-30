@@ -18,29 +18,16 @@
  * along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "helpers.h"
 
-void state_write( uint32_t *loc, uint32_t val)
+void 
+state_wait_for_interrupt(void)
 {
+	assert(0);
     UNIMPLIMENTED();
 }
 
-void state_write_p (uint32_t **ploc, uint32_t *pval)
-{
-    UNIMPLIMENTED();
-}
-
-void state_start_tick(void)
-{
-    return;
-}
-
-void state_tock(void)
-{
-    return;
-}

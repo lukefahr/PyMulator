@@ -28,13 +28,16 @@ import sys
 
 try:
     import threading
-    import queue 
 except ImportError:
     print("ERROR: Your Python doesn't support threads")
     raise
+try:    
+    import queue 
+except ImportError:
+    import Queue as queue
 
 try:
-    import PyMulatorC
+    import PyMulatorC as PyMulatorC
 except ImportError:
     print("ERROR:  Couldn't find PyMulatorC module?")
     raise

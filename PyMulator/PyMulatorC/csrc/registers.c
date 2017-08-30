@@ -18,10 +18,11 @@
  * along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "core/common.h"
 #include "core/pipeline.h"

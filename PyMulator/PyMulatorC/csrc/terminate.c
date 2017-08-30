@@ -18,16 +18,21 @@
  * along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <stdio.h>
 
-#include "helpers.h"
+/** no idea */
+int raiseonerror = 1;
 
-void 
-state_wait_for_interrupt(void)
+/**
+ * terminates the "simulation" 
+ * (which we aren't really running)
+ */
+void sim_terminate(bool should_exit)
 {
-	assert(0);
-    UNIMPLIMENTED();
+    printf("SIM TERMINATE\n");
+    exit(EXIT_SUCCESS);
 }
+
 

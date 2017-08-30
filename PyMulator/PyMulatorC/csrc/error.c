@@ -18,8 +18,9 @@
  * along with Mulator.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define PP_STRING "COR"
 #include "core/common.h"

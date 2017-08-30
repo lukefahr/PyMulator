@@ -21,6 +21,7 @@
 #define __HELPERS_H__
 
 #include <stdlib.h>
+#include <stdint.h>
 
 /**
  * calls the host callback with a read gdb-like command

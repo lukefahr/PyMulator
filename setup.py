@@ -8,34 +8,34 @@ except ImportError:
     print "WARNING: SetupTools Error, Falling back to DistUtils"
     from distutils.core import setup, Extension
 
-from PyMulator import __version__
 
 arm_thumb_dir =  'M-ulator/simulator/core/isa/arm-thumb/' 
 arm_thumb_files = map(lambda y: arm_thumb_dir+y, 
                     filter(lambda x: x.endswith('.c'), os.listdir(arm_thumb_dir)))
 operations_dir = 'M-ulator/simulator/core/operations/'
 operations_files = map(lambda y: operations_dir+y, 
-                    filter(lambda x: '.c' in x, os.listdir(operations_dir)))
+                    filter(lambda x: '.c' in x, os.listdir(operations_dir))) 
 
 # the c extension module
 extension_mod = Extension(
-    name = "PyMulatorC", 
+    name = "PyMulator.PyMulatorC", 
     define_macros = [ ('M_PROFILE', None), ('NO_PIPELINE', None), \
                         ('DEBUG1', None), ('DEBUG2',None)  ],
-    include_dirs = ['M-ulator/simulator/', './PyMulator'],
-    sources = [   
-        "PyMulator/PyMulatorC.c",
+    include_dirs = ['M-ulator/simulator/', ],
 
-        "PyMulator/csrc/core.c",
-        "PyMulator/csrc/extra.c",
-        "PyMulator/csrc/exception.c",
-        "PyMulator/csrc/helpers.c",
-        "PyMulator/csrc/interface.c",
-        "PyMulator/csrc/interrupts.c",
-        "PyMulator/csrc/memory.c",
-        "PyMulator/csrc/registers.c",
-        "PyMulator/csrc/terminate.c",
-        "PyMulator/csrc/error.c",
+    sources = [   
+        "PyMulator/PyMulatorC/PyMulatorC.c",
+
+        "PyMulator/PyMulatorC/csrc/core.c",
+        "PyMulator/PyMulatorC/csrc/extra.c",
+        "PyMulator/PyMulatorC/csrc/exception.c",
+        "PyMulator/PyMulatorC/csrc/helpers.c",
+        "PyMulator/PyMulatorC/csrc/interface.c",
+        "PyMulator/PyMulatorC/csrc/interrupts.c",
+        "PyMulator/PyMulatorC/csrc/memory.c",
+        "PyMulator/PyMulatorC/csrc/registers.c",
+        "PyMulator/PyMulatorC/csrc/terminate.c",
+        "PyMulator/PyMulatorC/csrc/error.c",
 
 		"M-ulator/simulator/core/isa/decode_helpers.c",
 		"M-ulator/simulator/core/isa/decompile.c",
@@ -45,14 +45,18 @@ extension_mod = Extension(
 
         ] + arm_thumb_files + operations_files,
         #debug only?
-        extra_compile_args = ["-UNDEBUG", "-g", "-O0"]
+        extra_compile_args = ["-std=c11", "-UNDEBUG", "-g", "-O0"]
 )
 
+
+from PyMulator import __version__
 
 setup(
     name = "PyMulator", 
     version = __version__,
     description = 'GDB-like interface for Mulator',
+    packages= { 'PyMulator',}, 
+    #ext_package='PyMulator.PyMulatorC',
     ext_modules=[extension_mod],
     )
 
