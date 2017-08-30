@@ -10,10 +10,10 @@ except ImportError:
 
 from PyMulator import __version__
 
-arm_thumb_dir =  '../simulator/core/isa/arm-thumb/' 
+arm_thumb_dir =  'M-ulator/simulator/core/isa/arm-thumb/' 
 arm_thumb_files = map(lambda y: arm_thumb_dir+y, 
                     filter(lambda x: x.endswith('.c'), os.listdir(arm_thumb_dir)))
-operations_dir = '../simulator/core/operations/'
+operations_dir = 'M-ulator/simulator/core/operations/'
 operations_files = map(lambda y: operations_dir+y, 
                     filter(lambda x: '.c' in x, os.listdir(operations_dir)))
 
@@ -22,7 +22,7 @@ extension_mod = Extension(
     name = "PyMulatorC", 
     define_macros = [ ('M_PROFILE', None), ('NO_PIPELINE', None), \
                         ('DEBUG1', None), ('DEBUG2',None)  ],
-    include_dirs = ['../simulator/', './PyMulator'],
+    include_dirs = ['M-ulator/simulator/', './PyMulator'],
     sources = [   
         "PyMulator/PyMulatorC.c",
 
@@ -37,11 +37,11 @@ extension_mod = Extension(
         "PyMulator/csrc/terminate.c",
         "PyMulator/csrc/error.c",
 
-		"../simulator/core/isa/decode_helpers.c",
-		"../simulator/core/isa/decompile.c",
-		"../simulator/core/opcodes.c",
-        "../simulator/core/pipeline.c",
-		"../simulator/cpu/misc.c",
+		"M-ulator/simulator/core/isa/decode_helpers.c",
+		"M-ulator/simulator/core/isa/decompile.c",
+		"M-ulator/simulator/core/opcodes.c",
+        "M-ulator/simulator/core/pipeline.c",
+		"M-ulator/simulator/cpu/misc.c",
 
         ] + arm_thumb_files + operations_files,
         #debug only?

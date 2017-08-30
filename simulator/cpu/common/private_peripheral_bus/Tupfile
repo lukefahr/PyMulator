@@ -1,4 +1,0 @@
-include_rules
-
-: gen_registers.py | exceptions *.conf |> python %f *.conf |> ppb.c ppb.h
-: ppb.c | ppb.h |> !cc |> %B.o ../../../<objs>

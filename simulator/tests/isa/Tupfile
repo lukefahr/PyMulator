@@ -1,3 +1,0 @@
-include Tuprules.tup
-
-: vectors.s |> !arm_as |>
