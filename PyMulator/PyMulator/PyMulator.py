@@ -52,6 +52,7 @@ except ImportError:
  PyMulator currently accepts the following commands:
     - stepi:  read the current pc register, find the instruction in memory, 
                 execute it, and update the register/memory contents accordingly
+    - quit:  stops the currently executing Mulator                
  
 '''
 class PyMulator(object):
@@ -122,14 +123,17 @@ class PyMulator(object):
         this.mulator_thread = multiprocessing.Process(
                 target=this._mulator_process, \
                 args=(this.mulator_req_queue, this.mulator_resp_queue))
+        this.mulator_thread.daemon = True
         this.mulator_thread.start()                                
-
+    
     def stepi(this):
         '''
         Single steps using Mulator
         '''
         this._process_cmd('stepi')
-
+    
+    def quit(this):
+        this._process_cmd('quit')
     
     def _process_cmd(this, cmd):
         '''
@@ -264,14 +268,18 @@ class PyMulator(object):
         # register our callback function
         PyMulatorC.register_callback(this._mulator_callback)
        
-        msg = ''
-        while  not msg.startswith('quit'):
-            msg = reqQ.get()
-
+        msg = reqQ.get()
+        while not msg.startswith('quit'):
+            
             PyMulatorC.call_to_mulator(msg)
 
             respQ.put('DONE: ' + msg)
-       
+
+            msg = reqQ.get()
+
+        this._dprintf('Quitting\n') 
+        respQ.put('DONE: ' + msg)
+
     
     def _mulator_callback(this,gdb_req):
         '''
