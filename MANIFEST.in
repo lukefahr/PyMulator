@@ -1,2 +1,3 @@
-graft M-ulator/simulator/
-graft PyMulator/PyMulatorC/csrc/
+
+recursive-include M-ulator/simulator *
+recursive-include PyMulator/PyMulatorC/csrc *
