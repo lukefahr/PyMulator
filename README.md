@@ -11,5 +11,10 @@
 
 #PyMulator
 
-This project is a python wrapper for M-ulator
+This project is a python wrapper library for 
+[M-ulator](https://github.com/mbus/m3-python)
+
+
+
+
 

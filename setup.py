@@ -45,7 +45,7 @@ extension_mod = Extension(
 
         ] + arm_thumb_files + operations_files,
         #debug only?
-        extra_compile_args = ["-std=c11", "-UNDEBUG", "-g", "-O0"]
+        extra_compile_args = ["-std=c11", "-UNDEBUG", "-g", ]
 )
 
 
@@ -54,9 +54,13 @@ from PyMulator import __version__
 setup(
     name = "PyMulator", 
     version = __version__,
-    description = 'GDB-like interface for Mulator',
+    author = 'Andrew Lukefahr',
+    url = 'https://github.com/lukefahr/PyMulator',
+
+    description = 'Library with a GDB-like interface for Mulator',
     packages= { 'PyMulator',}, 
     #ext_package='PyMulator.PyMulatorC',
     ext_modules=[extension_mod],
+
     )
 
